@@ -1,8 +1,8 @@
 
 import 'package:biznest/app/home/home_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:biznest/test_auth.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,21 +20,16 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     try {
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final UserCredential? userCredential = await TestAuth.signInWithGoogle();
 
-      if (googleUser != null) {
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        final OAuthCredential credential = GoogleAuthProvider.credential(
-          idToken: googleAuth.idToken,
+      if (userCredential != null && mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
-
-        await FirebaseAuth.instance.signInWithCredential(credential);
-
-        if (mounted) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to sign in with Google.')),
+        );
       }
     } catch (e) {
       // Handle error
